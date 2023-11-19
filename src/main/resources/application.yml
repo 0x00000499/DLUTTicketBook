@@ -1,0 +1,10 @@
+spring:
+  profiles:
+    active: dev
+dlut:
+  username: yourUserName
+  password: yourPassword
+  keys:
+    firstKey: 1
+    secondKey: 2
+    thirdKey: 3
