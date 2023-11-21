@@ -11,6 +11,4 @@ public class DLUTUser {
     private String userName;
     @Value("${dlut.password}")
     private String passWord;
-    @Value("${dlut.sport}")
-    private String sport;
 }

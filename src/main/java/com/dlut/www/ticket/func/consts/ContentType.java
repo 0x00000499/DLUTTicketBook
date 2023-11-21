@@ -1,4 +1,4 @@
-package com.dlut.www.ticket.func.request.header;
+package com.dlut.www.ticket.func.consts;
 
 public enum ContentType {
     APPLICATION_ATOM_XML("application/atom+xml"),

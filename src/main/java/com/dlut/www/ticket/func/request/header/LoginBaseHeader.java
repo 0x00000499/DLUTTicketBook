@@ -1,5 +1,6 @@
 package com.dlut.www.ticket.func.request.header;
 
+import com.dlut.www.ticket.func.consts.HeaderName;
 import lombok.Getter;
 import okhttp3.Headers;
 

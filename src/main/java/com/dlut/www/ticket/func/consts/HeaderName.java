@@ -1,11 +1,15 @@
-package com.dlut.www.ticket.func.request.header;
+package com.dlut.www.ticket.func.consts;
 
 public enum HeaderName {
     AUTHORITY("authority"),
     ACCEPT("accept"),
     ACCEPT_LANGUAGE("accept_language", "zh-CN,zh;q=0.9"),
     CACHE_CONTROL("cache-control", "no-cache"),
+    ACCEPT_ENCODING("accept-encoding"),
+    AUTHORIZATION("authorization"),
+    HOST("host"),
     CONTENT_TYPE("content_type"),
+    REFERER("referer"),
     COOKIE("cookie"),
     ORIGIN("origin"),
     PRAGMA("pragma", "no-cache"),

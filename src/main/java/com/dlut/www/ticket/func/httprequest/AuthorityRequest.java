@@ -3,8 +3,8 @@ package com.dlut.www.ticket.func.httprequest;
 import com.dlut.www.ticket.func.verify.cookie.cookiestore.CookieStore;
 import com.dlut.www.ticket.func.dao.DLUTUser;
 import com.dlut.www.ticket.func.request.body.LoginRequest;
-import com.dlut.www.ticket.func.request.header.ContentType;
-import com.dlut.www.ticket.func.request.header.HeaderName;
+import com.dlut.www.ticket.func.consts.ContentType;
+import com.dlut.www.ticket.func.consts.HeaderName;
 import com.dlut.www.ticket.func.request.header.LoginBaseHeader;
 import com.dlut.www.ticket.func.utils.DesUtils;
 import com.dlut.www.ticket.func.verify.token.TokenStore;
@@ -23,13 +23,8 @@ import java.util.Objects;
 
 @Component
 @Slf4j
-public class AuthorityRequest implements InitializingBean{
+public class AuthorityRequest{
     private static final String loginPageURL = "https://sso.dlut.edu.cn/login";
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        login();
-    }
 
     private static final String ssoURL = "https://sso.dlut.edu.cn/cas/login?service=http://adm-tycg.dlut.edu.cn/api/login/login";
     @Autowired
@@ -59,14 +54,14 @@ public class AuthorityRequest implements InitializingBean{
         }
     }
 
-    private String getLt(String loginPage){
+    private String getLt(String loginPage) {
         // 2. get LT for rsa builder
         Document document = Jsoup.parse(loginPage);
         Element elementLt = document.selectFirst("#lt");
         return Objects.requireNonNull(elementLt).attr("value");
     }
 
-    private LoginRequest requestBuidler(String lt){
+    private LoginRequest requestBuidler(String lt) {
         // 3. build login requestbody
         LoginRequest req = new LoginRequest();
         req.setLt(lt);
@@ -82,7 +77,7 @@ public class AuthorityRequest implements InitializingBean{
     /**
      * get CASTGC Cookie
      */
-    private void cookieCASTGC(LoginRequest requestBody){
+    private void cookieCASTGC(LoginRequest requestBody) {
         // 4. get cookie CASTGC
         String cookie = "cas_hash=; Language=zh_CN;JSESSIONIDCAS=" + cookieStore.get(HttpUrl.parse(loginPageURL).host(), "JSESSIONIDCAS").value();
         String refer = "https://sso.dlut.edu.cn/cas/login;JSESSIONIDCAS=" + cookieStore.get(HttpUrl.parse(loginPageURL).host(), "JSESSIONIDCAS").value() + "?service=https%3A%2F%2Fportal.dlut.edu.cn%2Ftp%2F";
@@ -124,10 +119,10 @@ public class AuthorityRequest implements InitializingBean{
         }
     }
 
-    private String getURLWithTicket(){
+    private String getURLWithTicket() {
         String cookie = "CASTGC=" + cookieStore.get(HttpUrl.parse(ssoURL).host(), "CASTGC")
                 + ";Language=zh_CN; JSESSIONIDCAS=" + cookieStore.get(HttpUrl.parse(ssoURL).host(), "JESSIONIDCAS")
-                +"; path=/; httponly; cas_hash=";
+                + "; path=/; httponly; cas_hash=";
         Headers headers = new Headers.Builder()
                 .add(HeaderName.AUTHORITY.getName(), "sso.dlut.edu.cn")
                 .add(HeaderName.ACCEPT.getName(), "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
@@ -152,7 +147,7 @@ public class AuthorityRequest implements InitializingBean{
     }
 
     // redirect to get token
-    private String getToken(String ticketURL){
+    private String getToken(String ticketURL) {
         Headers headers = new Headers.Builder()
                 .addAll(LoginBaseHeader.getBaseHeaders())
                 .add(HeaderName.AUTHORITY.getName(), "portal.dlut.edu.cn")
@@ -170,7 +165,7 @@ public class AuthorityRequest implements InitializingBean{
                 .build();
         try (Response response = okHttpClient.newCall(request).execute()) {
             String location = response.header("Location");
-            if(Objects.isNull(location)){
+            if (Objects.isNull(location)) {
                 log.info("location get failed");
             } else {
                 log.info("Ticket has been got");
@@ -183,17 +178,18 @@ public class AuthorityRequest implements InitializingBean{
     }
 
 
-    private void login(){
+    public void login() {
         // 1.JSESSIONIDCAS
         String loginPage = getLoginPage();
         String lt = getLt(loginPage);
         // 2.CASTGC
         LoginRequest loginRequest = requestBuidler(lt);
         cookieCASTGC(loginRequest);
-        // 3.TOKEN
+        // 3.TICKET
         String ticketURL = getURLWithTicket();
+        // 4.TOKEN
         String token = getToken(ticketURL);
-        // 4.Save Token
+        // 5.Save Token
         this.tokenStore.addToken(Objects.requireNonNull(HttpUrl.parse(ssoURL)).host(), token);
         log.info("You have successfully login");
     }

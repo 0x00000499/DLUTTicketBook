@@ -8,4 +8,9 @@ dlut:
     firstKey: 1
     secondKey: 2
     thirdKey: 3
-  sport: Basketball
+  sport: Basketball # Basketball/PingPong
+  date: 2023-11-23
+  start_time: '20:00,21:00' # '10:00,11:00....' 按照网页上展示的开始时间进行设置必须准确,且格式必须准确 'time,time,time'
+  court: 0,1  # 按照网页展示顺序从左到右 0,1,2... ,抢票的时候会依次看某个时间段内这些场地是否空闲
+  pay_method: 3 # 3是微信或者支付宝支付,1是玉兰卡支付
+  retries: 50 # 订票失败重试次数
