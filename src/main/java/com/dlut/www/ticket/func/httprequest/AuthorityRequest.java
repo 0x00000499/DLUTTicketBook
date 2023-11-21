@@ -1,5 +1,6 @@
 package com.dlut.www.ticket.func.httprequest;
 
+import com.dlut.www.ticket.func.exception.CustomException;
 import com.dlut.www.ticket.func.verify.cookie.cookiestore.CookieStore;
 import com.dlut.www.ticket.func.dao.DLUTUser;
 import com.dlut.www.ticket.func.request.body.LoginRequest;
@@ -43,14 +44,12 @@ public class AuthorityRequest{
     @Value("${dlut.keys.thirdKey}")
     String thirdKey;
 
-    private String getLoginPage() {
+    private String getLoginPage() throws IOException{
         //1. build login request
         Request request = new Request.Builder().url(loginPageURL).build();
         try (Response response = okHttpClient.newCall(request).execute()) {
             log.info("Lt and cookie JSESSIONIDCAS has been got");
             return Objects.requireNonNull(response.body()).string();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -77,7 +76,7 @@ public class AuthorityRequest{
     /**
      * get CASTGC Cookie
      */
-    private void cookieCASTGC(LoginRequest requestBody) {
+    private void cookieCASTGC(LoginRequest requestBody) throws IOException{
         // 4. get cookie CASTGC
         String cookie = "cas_hash=; Language=zh_CN;JSESSIONIDCAS=" + cookieStore.get(HttpUrl.parse(loginPageURL).host(), "JSESSIONIDCAS").value();
         String refer = "https://sso.dlut.edu.cn/cas/login;JSESSIONIDCAS=" + cookieStore.get(HttpUrl.parse(loginPageURL).host(), "JSESSIONIDCAS").value() + "?service=https%3A%2F%2Fportal.dlut.edu.cn%2Ftp%2F";
@@ -114,12 +113,10 @@ public class AuthorityRequest{
 
         try (Response response = okHttpClient.newCall(request).execute()) {
             log.info("Cookie CASTGC has been got");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
-    private String getURLWithTicket() {
+    private String getURLWithTicket() throws IOException{
         String cookie = "CASTGC=" + cookieStore.get(HttpUrl.parse(ssoURL).host(), "CASTGC")
                 + ";Language=zh_CN; JSESSIONIDCAS=" + cookieStore.get(HttpUrl.parse(ssoURL).host(), "JESSIONIDCAS")
                 + "; path=/; httponly; cas_hash=";
@@ -141,13 +138,11 @@ public class AuthorityRequest{
         try (Response response = okHttpClient.newCall(req).execute()) {
             log.info("URL with Ticket has been got");
             return response.header("Location");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
     // redirect to get token
-    private String getToken(String ticketURL) {
+    private String getToken(String ticketURL) throws IOException{
         Headers headers = new Headers.Builder()
                 .addAll(LoginBaseHeader.getBaseHeaders())
                 .add(HeaderName.AUTHORITY.getName(), "portal.dlut.edu.cn")
@@ -167,18 +162,17 @@ public class AuthorityRequest{
             String location = response.header("Location");
             if (Objects.isNull(location)) {
                 log.info("location get failed");
+                return null;
             } else {
                 log.info("Ticket has been got");
             }
             return Objects.requireNonNull(location).substring(location.indexOf("token=") + "token=".length());
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
 
-    public void login() {
+    public boolean login() throws IOException{
         // 1.JSESSIONIDCAS
         String loginPage = getLoginPage();
         String lt = getLt(loginPage);
@@ -190,7 +184,7 @@ public class AuthorityRequest{
         // 4.TOKEN
         String token = getToken(ticketURL);
         // 5.Save Token
-        this.tokenStore.addToken(Objects.requireNonNull(HttpUrl.parse(ssoURL)).host(), token);
-        log.info("You have successfully login");
+        this.tokenStore.addToken(HttpUrl.parse(ssoURL).host(), token);
+        return Objects.nonNull(token);
     }
 }

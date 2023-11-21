@@ -31,22 +31,32 @@ public class Scheduler {
         long initDelay = calculateInitialDelay(currentDateTime, timeStartToBook);
         ScheduledExecutorService schedule = Executors.newScheduledThreadPool(4);
         Runnable run = ()->{
-            log.info("抢票开始,当前时间：" + LocalDateTime.now().format(timeFormatter));
+            LocalDateTime startTime = LocalDateTime.now();
+            log.info("抢票开始,当前时间：" + startTime.format(timeFormatter));
             // 1. 登陆
-            task.authority();
-            // 2. 尝试抢票,失败重试retries次
-            while (retries-- != 0){
-                // 3. 抢票成功的话停止抢票
-                if(task.book()) break;
+            int loginRetries = 100;
+            boolean loginRes = false;
+            while(loginRetries-- >= 0){
+                loginRes = task.authority();
+                if (loginRes) break;
             }
-            log.info("抢票结束,当前时间: " + LocalDateTime.now().format(timeFormatter));
+            if(loginRes){
+                // 2. 尝试抢票,失败重试retries次
+                while (retries-- >= 0){
+                    // 3. 抢票成功的话停止抢票
+                    if(task.book()) break;
+                }
+            }
+            LocalDateTime endTime = LocalDateTime.now();
+            log.info("抢票结束,当前时间: " + endTime.format(timeFormatter) + " 总计用时:" + String.valueOf(calculateInitialDelay(startTime, endTime)) + "s");
+            System.exit(0);
         };
         log.info("当前时间 " + LocalDateTime.now().format(timeFormatter) +
                 " 抢票任务已经提交,预计于 " + timeStartToBook.format(timeFormatter) + " 开始抢票");
         schedule.schedule(run, initDelay, TimeUnit.SECONDS);
     }
     // 计算延迟时间
-    private static long calculateInitialDelay(LocalDateTime now, LocalDateTime targetDateTime) {
+    private long calculateInitialDelay(LocalDateTime now, LocalDateTime targetDateTime) {
         Duration between = Duration.between(now, targetDateTime);
         return Math.max(between.getSeconds(), 0);
     }

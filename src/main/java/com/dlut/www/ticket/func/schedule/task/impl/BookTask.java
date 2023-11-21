@@ -10,6 +10,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 @Component
 @Slf4j
 public class BookTask implements Task, ApplicationContextAware {
@@ -18,22 +20,22 @@ public class BookTask implements Task, ApplicationContextAware {
     private String sport;
 
     @Override
-    public void authority(){
+    public boolean authority(){
         // 1.先登录
         AuthorityRequest authorityRequest = context.getBean(AuthorityRequest.class);
-        authorityRequest.login();
+        try {
+            return authorityRequest.login();
+        } catch (Exception e){
+            log.error("登陆失败请检查账号密码是否有问题:" + e.getMessage());
+            return false;
+        }
     }
 
     @Override
     public boolean book(){
         // 2.然后进行订票操作
-        try {
-            BookAction bookAction = (BookAction) context.getBean(Class.forName("com.dlut.www.ticket.func.action.impl." + sport +"BookAction"));
-            return bookAction.bookTicket();
-        } catch (ClassNotFoundException e) {
-            log.error("类找不到");
-            return false;
-        }
+        BookAction bookAction = context.getBean(BookAction.class);
+        return bookAction.bookTicket();
     }
 
     @Override
