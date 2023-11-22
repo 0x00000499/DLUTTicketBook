@@ -43,6 +43,8 @@ public class BookAction implements InitializingBean {
     private String mealId;
     private String fieldType;
 
+
+
     @Override
     public void afterPropertiesSet() throws Exception {
         if ("pingPong".equals(sport)) {
@@ -63,31 +65,6 @@ public class BookAction implements InitializingBean {
         }
     }
 
-    public boolean bookTicket() {
-        List<String> courtPrices = null;
-        List<String> courtInfos = null;
-        // 1.获取场地信息
-        try {
-            courtInfos = getAllCourtInfos();
-        } catch (Exception e){
-            log.error("获取场地信息失败:" + e.getMessage());
-            return false;
-        }
-        // 2.获取场地的票务信息
-        try {
-            courtPrices = getAllCourtPrice();
-        } catch (Exception e) {
-            log.error("获取场地票务信息失败" + e.getMessage());
-            return false;
-        }
-        // 3.根据场地和票务信息组装请求并发送
-        try {
-            return createOrder(courtPrices, courtInfos);
-        } catch (Exception e) {
-            log.error("下订单失败" + e.getMessage());
-            return false;
-        }
-    }
     public void showFieldFree(){
         try {
             TreeMap<String, List<String>> res = queryFieldFree();
@@ -322,22 +299,30 @@ public class BookAction implements InitializingBean {
             if ("1".equals(res.getString("code"))) {
                 log.info("抢票成功");
                 log.info(res.getString("data"));
-                System.out.println("票务信息如下:");
-                System.out.println("场地类型: " + sport);
-                System.out.println("日期: " + date);
-                Map<String, String> courtNameMap = new HashMap<>();
-                for (int i = 0; i < courtInfos.size(); i++) {
-                    JSONObject temp = JSONObject.parseObject(courtInfos.get(i));
-                    courtNameMap.put(String.valueOf(i), temp.getString("seat_number"));
-                }
-                ticketInfo.forEach((k, v)->{
-                    System.out.println(k + " " + courtNameMap.get(v));
-                });
+                showOrder(courtInfos, ticketInfo);
                 return true;
             } else {
                 log.info("抢票失败：" + res.get("info"));
                 return false;
             }
         }
+    }
+
+    private void showOrder(List<String> courtInfos, TreeMap<String, String> ticketInfo){
+        System.out.println("订单详情如下:");
+        System.out.println("场地类型: " + sport);
+        System.out.println("日期: " + date);
+        if(Objects.isNull(courtInfos)){
+            System.out.println("场地信息获取出现问题无法显示订单详情");
+            return;
+        }
+        Map<String, String> courtNameMap = new HashMap<>();
+        for (int i = 0; i < courtInfos.size(); i++) {
+            JSONObject temp = JSONObject.parseObject(courtInfos.get(i));
+            courtNameMap.put(String.valueOf(i), temp.getString("seat_number"));
+        }
+        ticketInfo.forEach((k, v)->{
+            System.out.println(k + " " + courtNameMap.get(v));
+        });
     }
 }
