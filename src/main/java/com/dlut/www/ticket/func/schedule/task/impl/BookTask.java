@@ -39,6 +39,12 @@ public class BookTask implements Task, ApplicationContextAware {
     }
 
     @Override
+    public void query() {
+        BookAction bookAction = context.getBean(BookAction.class);
+        bookAction.showFieldFree();
+    }
+
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.context = applicationContext;
     }
