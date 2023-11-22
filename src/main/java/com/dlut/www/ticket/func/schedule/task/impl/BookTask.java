@@ -1,7 +1,7 @@
 package com.dlut.www.ticket.func.schedule.task.impl;
 
 import com.dlut.www.ticket.func.action.BookAction;
-import com.dlut.www.ticket.func.httprequest.AuthorityRequest;
+import com.dlut.www.ticket.func.action.AuthorityAction;
 import com.dlut.www.ticket.func.schedule.task.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -10,12 +10,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 @Component
 @Slf4j
@@ -27,12 +25,11 @@ public class BookTask implements Task, ApplicationContextAware {
     private int retries;
     private static final String SHOW_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
-    @Override
-    public boolean authority(){
+    private boolean authority(){
         // 1.先登录
-        AuthorityRequest authorityRequest = context.getBean(AuthorityRequest.class);
+        AuthorityAction authorityAction = context.getBean(AuthorityAction.class);
         try {
-            return authorityRequest.login();
+            return authorityAction.login();
         } catch (Exception e){
             log.error("登陆失败请检查账号密码是否有问题:" + e.getMessage());
             return false;

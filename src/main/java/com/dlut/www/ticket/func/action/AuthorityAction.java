@@ -1,6 +1,5 @@
-package com.dlut.www.ticket.func.httprequest;
+package com.dlut.www.ticket.func.action;
 
-import com.dlut.www.ticket.func.exception.CustomException;
 import com.dlut.www.ticket.func.verify.cookie.cookiestore.CookieStore;
 import com.dlut.www.ticket.func.dao.DLUTUser;
 import com.dlut.www.ticket.func.request.body.LoginRequest;
@@ -14,7 +13,6 @@ import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,7 +22,7 @@ import java.util.Objects;
 
 @Component
 @Slf4j
-public class AuthorityRequest{
+public class AuthorityAction {
     private static final String loginPageURL = "https://sso.dlut.edu.cn/login";
 
     private static final String ssoURL = "https://sso.dlut.edu.cn/cas/login?service=http://adm-tycg.dlut.edu.cn/api/login/login";
