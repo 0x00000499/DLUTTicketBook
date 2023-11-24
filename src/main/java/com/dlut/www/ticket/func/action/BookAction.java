@@ -223,34 +223,49 @@ public class BookAction implements InitializingBean {
             LocalTime tt2 = LocalTime.parse(t2.substring(0, t2.indexOf("-")), DateTimeFormatter.ofPattern("HH:mm"));
             return tt1.compareTo(tt2);
         });
-        for (String cp : courtPrices) {
-            // 遍历所有的场地信息
-            JSONObject temp = JSONObject.parseObject(cp);
-            if (start_times.contains(temp.getString("start_time"))) {
-                meal_id = temp.getString("meal_id");
-                boolean ticketOk = false;
-                // 如果当前开始时间在预定时间范围内
-                JSONArray fieldList = temp.getJSONArray("fieldlist_s");
-                for (String fid : courts) {
-                    // 判断所有期望场地中是否还有空闲场地
-                    JSONObject field = (JSONObject) fieldList.get(Integer.parseInt(fid));
-                    if ("false".equals(field.getString("lock"))) {
-                        // 还有空闲场地当前时间段的订购可以满足需求,将该参数进行组装
-                        ticketOk = true;
-                        priceIds.add(field.getString("price_id"));
-                        timeIds.add(field.getString("time_id"));
-                        fieldIds.add(field.getString("field_id"));
-                        price.add(field.getString("vip_0_price"));
-                        ticketInfo.put(temp.getString("start_time") + "-" + temp.getString("end_time"), fid);
+        String[] sts = start_times.split("\\|");
+        boolean needOk = true;
+        for (String start_time : sts){
+            needOk = true;
+            for (String cp : courtPrices) {
+                // 遍历所有的场地信息
+                JSONObject temp = JSONObject.parseObject(cp);
+                if (start_time.contains(temp.getString("start_time"))) {
+                    meal_id = temp.getString("meal_id");
+                    boolean ticketOk = false;
+                    // 如果当前开始时间在预定时间范围内
+                    JSONArray fieldList = temp.getJSONArray("fieldlist_s");
+                    for (String fid : courts) {
+                        // 判断所有期望场地中是否还有空闲场地
+                        JSONObject field = (JSONObject) fieldList.get(Integer.parseInt(fid));
+                        if ("false".equals(field.getString("lock"))) {
+                            // 还有空闲场地当前时间段的订购可以满足需求,将该参数进行组装
+                            ticketOk = true;
+                            priceIds.add(field.getString("price_id"));
+                            timeIds.add(field.getString("time_id"));
+                            fieldIds.add(field.getString("field_id"));
+                            price.add(field.getString("vip_0_price"));
+                            ticketInfo.put(temp.getString("start_time") + "-" + temp.getString("end_time"), fid);
+                            break;
+                        }
+                    }
+                    // 如果没有场地能够满足当前的订购需求则抢票失败
+                    if (!ticketOk) {
+                        priceIds.clear();
+                        timeIds.clear();
+                        fieldIds.clear();
+                        price.clear();
+                        ticketInfo.clear();
+                        needOk = false;
                         break;
                     }
                 }
-                // 如果没有场地能够满足当前的订购需求则抢票失败
-                if (!ticketOk) {
-                    log.info("当前票量不能满足当前需求，抢票失败");
-                    return false;
-                }
             }
+            if(needOk) break;
+        }
+        if(!needOk){
+            log.info("当前票量不能满足任何一个需求抢票失败");
+            return false;
         }
         JSONObject selectCourts = new JSONObject();
         selectCourts.put("court_id", productId);
