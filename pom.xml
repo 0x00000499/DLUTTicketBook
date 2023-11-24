@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.dlut.www</groupId>
-    <artifactId>DLUTTicketBook</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>DLUTTicketBook</name>
-    <description>DLUTTicketBook</description>
+    <artifactId>dlutticketbook</artifactId>
+    <version>v1.0.0</version>
+    <name>dlutticketbook</name>
+    <description>dlut gym tiket rush</description>
     <properties>
         <java.version>8</java.version>
     </properties>
@@ -60,7 +60,12 @@
             <version>2.0.0</version>
         </dependency>
     </dependencies>
-
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/0x00000499/DLUTTicketBook</url>
+        </repository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
