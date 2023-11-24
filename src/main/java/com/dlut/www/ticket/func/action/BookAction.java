@@ -40,7 +40,6 @@ public class BookAction implements InitializingBean {
     private String productId;
     private String orderType;
     private String venueId;
-    private String mealId;
     private String fieldType;
 
 
@@ -51,13 +50,11 @@ public class BookAction implements InitializingBean {
             productId = "80";
             orderType = "3";
             venueId = "236";
-            mealId = "132";
             fieldType = "1";
         } else if ("basketball".equals(sport)) {
             productId = "78";
             orderType = "3";
             venueId = "236";
-            mealId = "128";
             fieldType = "1";
         } else {
             log.error("没有找到对应的运动类参数,请检查运动名称pingPong/basketball");
@@ -216,6 +213,7 @@ public class BookAction implements InitializingBean {
      */
     public boolean createOrder(List<String> courtPrices, List<String> courtInfos) throws Exception {
         String token = tokenStore.getTokens("sso.dlut.edu.cn").get(0);
+        String meal_id = "";
         List<String> priceIds = new ArrayList<>();
         List<String> timeIds = new ArrayList<>();
         List<String> fieldIds = new ArrayList<>();
@@ -229,6 +227,7 @@ public class BookAction implements InitializingBean {
             // 遍历所有的场地信息
             JSONObject temp = JSONObject.parseObject(cp);
             if (start_times.contains(temp.getString("start_time"))) {
+                meal_id = temp.getString("meal_id");
                 boolean ticketOk = false;
                 // 如果当前开始时间在预定时间范围内
                 JSONArray fieldList = temp.getJSONArray("fieldlist_s");
@@ -255,8 +254,8 @@ public class BookAction implements InitializingBean {
         }
         JSONObject selectCourts = new JSONObject();
         selectCourts.put("court_id", productId);
-        selectCourts.put("meal_id", mealId);
         selectCourts.put("field_type", fieldType);
+        selectCourts.put("meal_id", meal_id);
         selectCourts.put("price_ids", String.join(",", priceIds));
         selectCourts.put("time_ids", String.join(",", timeIds));
         selectCourts.put("field_ids", String.join(",", fieldIds));
@@ -302,7 +301,7 @@ public class BookAction implements InitializingBean {
                 showOrder(courtInfos, ticketInfo);
                 return true;
             } else {
-                log.info("抢票失败：" + res.get("info"));
+                log.info("抢票失败：" + res.getString("info"));
                 return false;
             }
         }

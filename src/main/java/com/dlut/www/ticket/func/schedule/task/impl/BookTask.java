@@ -81,7 +81,7 @@ public class BookTask implements Task, ApplicationContextAware {
 
         }
         LocalDateTime endTime = LocalDateTime.now();
-        log.info("抢票结束,当前时间: " + endTime.format(timeFormatter) + " 总计用时:" + String.valueOf(calculateInitialDelay(startTime, endTime)) + "s");
+        log.info("抢票结束,当前时间: " + endTime.format(timeFormatter) + " 总计用时:" + calculateInitialDelay(startTime, endTime) + "s");
         System.exit(0);
     }
 
