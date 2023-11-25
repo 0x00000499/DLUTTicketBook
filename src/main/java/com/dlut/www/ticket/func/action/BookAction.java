@@ -56,8 +56,13 @@ public class BookAction implements InitializingBean {
             orderType = "3";
             venueId = "236";
             fieldType = "1";
+        } else if("badminton".equals(sport)){
+            productId = "81";
+            orderType = "3";
+            venueId = "236";
+            fieldType = "1";
         } else {
-            log.error("没有找到对应的运动类参数,请检查运动名称pingPong/basketball");
+            log.error("没有找到对应的运动类参数,请检查运动名称pingPong/basketball/badminton");
             throw new Exception();
         }
     }
