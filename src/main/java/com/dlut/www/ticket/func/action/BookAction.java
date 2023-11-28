@@ -268,7 +268,7 @@ public class BookAction implements InitializingBean {
             }
             if(needOk) break;
         }
-        if(!needOk){
+        if(!needOk || ticketInfo.isEmpty()){
             log.info("当前票量不能满足任何一个需求抢票失败");
             return false;
         }
@@ -313,6 +313,7 @@ public class BookAction implements InitializingBean {
                 .post(formBody)
                 .headers(headers)
                 .build();
+        log.info("正在发送订购请求...");
         try (Response response = httpClient.newCall(request).execute()) {
             JSONObject res = JSONObject.parseObject(response.body().string());
             if ("1".equals(res.getString("code"))) {
