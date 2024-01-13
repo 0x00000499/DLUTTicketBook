@@ -5,6 +5,7 @@ import com.dlut.www.ticket.func.action.AuthorityAction;
 import com.dlut.www.ticket.func.schedule.task.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -14,20 +15,23 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
-public class BookTask implements Task, ApplicationContextAware {
-    private ApplicationContext context;
-    @Value("${dlut.sport}")
-    private String sport;
+public class BookTask implements Task{
     @Value("${dlut.retries}")
     private int retries;
     private static final String SHOW_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
-    private boolean authority(){
+    @Autowired
+    private AuthorityAction authorityAction;
+
+    @Autowired
+    private BookAction bookAction;
+
+    public boolean authority(){
         // 1.先登录
-        AuthorityAction authorityAction = context.getBean(AuthorityAction.class);
         try {
             return authorityAction.login();
         } catch (Exception e){
@@ -40,7 +44,6 @@ public class BookTask implements Task, ApplicationContextAware {
     public void book(){
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern(SHOW_TIME_PATTERN);
         // 进行订票操作
-        BookAction bookAction = context.getBean(BookAction.class);
         LocalDateTime startTime = LocalDateTime.now();
         log.info("抢票开始,当前时间：" + startTime.format(timeFormatter));
         // 1. 登陆
@@ -53,30 +56,14 @@ public class BookTask implements Task, ApplicationContextAware {
         if (loginRes) {
             log.info("登陆成功");
             // 1.获取场地信息
-            List<String> courtInfos = null;
-            try {
-                courtInfos = bookAction.getAllCourtInfos();
-            } catch (Exception e){
-                log.error("获取场地信息失败:" + e.getMessage());
-            }
+            List<String> courtInfos = getAllCourtInfos();
             // 尝试抢票,失败重试retries次
             while (retries-- >= 0) {
-                List<String> courtPrices = null;
-                // 获取场地的票务信息
-                try {
-                    courtPrices = bookAction.getAllCourtPrice();
-                } catch (Exception e) {
-                    log.error("获取场地票务信息失败" + e.getMessage());
-                    continue;
-                }
-                // 根据场地和票务信息组装请求并发送
-                try {
-                    if (bookAction.createOrder(courtPrices, courtInfos)) {
-                        break;
-                    }
-                } catch (Exception e) {
-                    log.error("下订单失败" + e.getMessage());
-                }
+                // 2.获取票务信息
+                List<String> courtPrices = getAllCourtPrices();
+                if(Objects.isNull(courtPrices)) continue;
+                // 3.根据场地和票务信息组装请求并发送
+                if(createOrder(courtPrices, courtInfos))break;
             }
 
         }
@@ -87,7 +74,6 @@ public class BookTask implements Task, ApplicationContextAware {
 
     @Override
     public void query() {
-        BookAction bookAction = context.getBean(BookAction.class);
         // 1. 登陆
         int loginRetries = 100;
         boolean loginRes = false;
@@ -102,13 +88,40 @@ public class BookTask implements Task, ApplicationContextAware {
         System.exit(0);
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.context = applicationContext;
-    }
-
     private long calculateInitialDelay(LocalDateTime now, LocalDateTime targetDateTime) {
         Duration between = Duration.between(now, targetDateTime);
         return Math.max(between.getSeconds(), 0);
+    }
+
+    @Override
+    public List<String> getAllCourtInfos() {
+        List<String> courtInfos = null;
+        try {
+            courtInfos = bookAction.getAllCourtInfos();
+        } catch (Exception e){
+            log.error("获取场地信息失败:" + e.getMessage());
+        }
+        return courtInfos;
+    }
+
+    @Override
+    public List<String> getAllCourtPrices() {
+        List<String> courtPrices = null;
+        try {
+            courtPrices = bookAction.getAllCourtPrice();
+        } catch (Exception e) {
+            log.error("获取场地票务信息失败" + e.getMessage());
+        }
+        return courtPrices;
+    }
+
+    public boolean createOrder(List<String> courtPrices, List<String> courtInfos){
+        boolean res = false;
+        try {
+            res = bookAction.createOrder(courtPrices, courtInfos);
+        } catch (Exception e) {
+            log.error("下订单失败" + e.getMessage());
+        }
+        return res;
     }
 }
