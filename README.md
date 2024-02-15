@@ -19,7 +19,6 @@
 ### 认证过程
 体育馆场馆预定的 URL 是：`http://adm-tycg.dlut.edu.cn/api/login/login`
 但是如果清除所有浏览器 Cookie 后即没有认证的时候去访问这个链接，会首先要求进行登陆，重定向到达 `http://sso.dlut.edu.cn/cas/login`进行统一身份认证。
-![](https://raw.githubusercontent.com/0x00000499/ImageHostService/main/img/dlutTicketBook/20231123152756.png)
 当重定向到统一身份认证界面的时候，服务器会自动响应一个 Cookie `JSESSIONCASID`，后续需要携带该 Cookie 进行认证接下来的操作。
 ![](https://raw.githubusercontent.com/0x00000499/ImageHostService/main/img/dlutTicketBook/20231125151143.png)
 输入账号密码之后会进行登陆进入体育场馆预定的主系统，在这个过程中会有两个关键的认证请求。
